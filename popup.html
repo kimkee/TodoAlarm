@@ -3,104 +3,110 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lotto Alarm</title>
+  <title>Todo Alarm</title>
   <!-- Google Fonts 적용 -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="popup.css">
+  
+  <!-- Tailwind CSS Standalone Browser Bundle -->
+  <script src="./tailwind.js"></script>
+  <link rel="stylesheet" href="./popup.css">
 </head>
-<body>
-  <div class="app-container">
+<body class="bg-[#0c0b14] text-gray-100 font-sans min-w-[420px] h-dvh min-h-[550px]">
+  <div class="app-container flex flex-col min-height-[550px] h-dvh mx-auto max-w-[490px] bg-[#161523]">
     <!-- 헤더 섹션 -->
-    <header class="app-header">
-      <div class="logo-area">
-        <img src="icons/icon128.png" alt="Lotto Alarm Logo" class="app-logo">
+    <header class="app-header border-b border-white/5 p-4">
+      <div class="logo-area flex items-center gap-3">
+        <div class="flex items-center justify-center bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg size-12"><img src="icons/icon128.png" alt="Todo Alarm" class="app-logo size-8 rounded-[10px] shadow-[0_0_15px_rgba(139,92,246,0.3)] object-cover"></div>
         <div class="brand-info">
-          <h1><a href="./popup.html" target="_blank">Alarm</a></h1>
-          <p>지정된 시간에 알려주는 스마트 리마인더</p>
+          <h1 class="font-header font-bold text-lg text-white leading-tight">
+            <a href="./popup.html" target="_blank" class="no-underline text-white hover:text-purple-400 transition-colors">Alarm</a>
+            <span class="version text-xs ml-1 text-gray-500" id="app_version"></span>
+          </h1>
+          <p class="text-[11px] text-gray-400 mt-[1px]">지정된 시간에 알려주는 스마트 리마인더</p>
         </div>
       </div>
     </header>
 
     <!-- 메인 컨텐츠 영역 -->
-    <main class="app-main">
+    <main class="app-main flex-1 overflow-x-hidden overflow-y-auto p-4">
       <!-- 알람 목록 섹션 -->
-      <section class="section alarms-section">
-        <div class="section-header">
-          <h2>내 알림 일정</h2>
-          <button id="btn-show-add-form" class="btn btn-primary btn-sm">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+      <section class="section animate-fade-in">
+        <div class="section-header flex justify-between items-center mb-3.5">
+          <h2 class="font-header font-semibold text-[15px] text-gray-200">내 알림 일정</h2>
+          <button id="btn-show-add-form" class="btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold rounded-lg shadow-md hover:shadow-purple-500/20 active:scale-95 transition-all cursor-pointer">
+            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
             알림 추가
           </button>
         </div>
 
-        <div id="alarm-list" class="alarm-list">
+        <div id="alarm-list" class="alarm-list flex flex-col gap-3 pr-0.5">
           <!-- JS를 통해 동적 생성됨 -->
-          <div class="empty-state">
-            <svg class="icon-empty" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-            <p>등록된 알림이 없습니다.</p>
+          <div class="empty-state flex flex-col items-center justify-center py-10 px-5 text-center bg-[#161523] border border-dashed border-white/5 rounded-xl">
+            <svg class="w-12 h-12 fill-gray-600 mb-3" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            <p class="text-xs text-gray-400">등록된 알림이 없습니다.</p>
           </div>
         </div>
       </section>
 
       <!-- 알람 작성/수정 양식 (기본 숨김) -->
-      <section id="form-container" class="section form-section hidden">
-        <div class="section-header">
-          <h2 id="form-title">알림 일정 추가</h2>
+      <section id="form-container" class="section hidden animate-fade-in bg-[#161523] border border-white/5 rounded-xl p-4 mt-4">
+        <div class="section-header mb-4">
+          <h2 id="form-title" class="font-header font-bold text-sm text-white">알림 일정 추가</h2>
         </div>
         
-        <form id="alarm-form">
+        <form id="alarm-form" class="flex flex-col gap-3.5">
           <input type="hidden" id="edit-id" value="">
           
           <div class="form-group">
-            <label for="alarm-name">알림 이름</label>
-            <input type="text" id="alarm-name" placeholder="예: 로또 구매 알리미" required maxlength="20">
+            <label for="alarm-name" class="block text-xs font-medium text-gray-400 mb-1.5">알림 이름</label>
+            <input type="text" id="alarm-name" class="w-full px-3 py-2 bg-[#1f1d31] border border-white/5 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all placeholder-gray-500" placeholder="예: 로또 구매 알리미" required maxlength="20">
           </div>
 
           <div class="form-group">
-            <label for="alarm-message">알림 메시지</label>
-            <input type="text" id="alarm-message" placeholder="예: 잊지 말고 로또 사세요!" required maxlength="50">
+            <label for="alarm-message" class="block text-xs font-medium text-gray-400 mb-1.5">알림 메시지</label>
+            <input type="text" id="alarm-message" class="w-full px-3 py-2 bg-[#1f1d31] border border-white/5 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all placeholder-gray-500" placeholder="예: 잊지 말고 로또 사세요!" required maxlength="50">
           </div>
 
           <div class="form-group">
-            <label for="alarm-url">연결할 URL</label>
-            <input type="url" id="alarm-url" placeholder="https://..." required>
+            <label for="alarm-url" class="block text-xs font-medium text-gray-400 mb-1.5">연결할 URL</label>
+            <input type="url" id="alarm-url" class="w-full px-3 py-2 bg-[#1f1d31] border border-white/5 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all placeholder-gray-500" placeholder="https://..." required>
           </div>
 
           <div class="form-group">
-            <label>알람 요일 선택</label>
-            <div class="day-selector">
-              <button type="button" class="day-chip" data-day="1">월</button>
-              <button type="button" class="day-chip" data-day="2">화</button>
-              <button type="button" class="day-chip" data-day="3">수</button>
-              <button type="button" class="day-chip" data-day="4">목</button>
-              <button type="button" class="day-chip" data-day="5">금</button>
-              <button type="button" class="day-chip" data-day="6">토</button>
-              <button type="button" class="day-chip" data-day="0">일</button>
+            <label class="block text-xs font-medium text-gray-400 mb-1.5">알람 요일 선택</label>
+            <div class="day-selector flex justify-between gap-1">
+              <button type="button" class="day-chip flex-1 bg-[#1f1d31] border border-white/5 rounded-md py-2 text-xs font-semibold text-gray-400 hover:bg-[#27253d] hover:text-white transition-colors cursor-pointer text-center" data-day="1">월</button>
+              <button type="button" class="day-chip flex-1 bg-[#1f1d31] border border-white/5 rounded-md py-2 text-xs font-semibold text-gray-400 hover:bg-[#27253d] hover:text-white transition-colors cursor-pointer text-center" data-day="2">화</button>
+              <button type="button" class="day-chip flex-1 bg-[#1f1d31] border border-white/5 rounded-md py-2 text-xs font-semibold text-gray-400 hover:bg-[#27253d] hover:text-white transition-colors cursor-pointer text-center" data-day="3">수</button>
+              <button type="button" class="day-chip flex-1 bg-[#1f1d31] border border-white/5 rounded-md py-2 text-xs font-semibold text-gray-400 hover:bg-[#27253d] hover:text-white transition-colors cursor-pointer text-center" data-day="4">목</button>
+              <button type="button" class="day-chip flex-1 bg-[#1f1d31] border border-white/5 rounded-md py-2 text-xs font-semibold text-gray-400 hover:bg-[#27253d] hover:text-white transition-colors cursor-pointer text-center" data-day="5">금</button>
+              <button type="button" class="day-chip flex-1 bg-[#1f1d31] border border-white/5 rounded-md py-2 text-xs font-semibold text-gray-400 hover:bg-[#27253d] hover:text-white transition-colors cursor-pointer text-center" data-day="6">토</button>
+              <button type="button" class="day-chip flex-1 bg-[#1f1d31] border border-white/5 rounded-md py-2 text-xs font-semibold text-gray-400 hover:bg-[#27253d] hover:text-white transition-colors cursor-pointer text-center" data-day="0">일</button>
             </div>
-            <div id="day-error" class="error-msg hidden">최소 하루 이상 요일을 선택해 주세요.</div>
+            <div id="day-error" class="error-msg text-[11px] text-red-500 mt-1.5 hidden">최소 하루 이상 요일을 선택해 주세요.</div>
           </div>
 
           <div class="form-group">
-            <label for="alarm-time">시간 설정</label>
-            <input type="time" id="alarm-time" required>
+            <label for="alarm-time" class="block text-xs font-medium text-gray-400 mb-1.5">시간 설정</label>
+            <input type="time" id="alarm-time" class="w-full px-3 py-2 bg-[#1f1d31] border border-white/5 rounded-lg text-white text-xs focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all" required>
           </div>
 
-          <div class="form-actions">
-            <button type="button" id="btn-cancel" class="btn btn-secondary">취소</button>
-            <button type="submit" id="btn-submit" class="btn btn-accent">저장하기</button>
+          <div class="form-actions flex justify-end gap-2.5 mt-3">
+            <button type="button" id="btn-cancel" class="px-4 py-2 bg-[#1f1d31] hover:bg-[#27253d] border border-white/5 rounded-lg text-xs font-medium text-gray-300 hover:text-white transition-all cursor-pointer">취소</button>
+            <button type="submit" id="btn-submit" class="px-4 py-2 bg-gradient-to-r from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white text-xs font-medium rounded-lg shadow-md hover:shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer">저장하기</button>
           </div>
         </form>
       </section>
     </main>
 
     <!-- 푸터 섹션 -->
-    <footer class="app-footer">
-      <p>Lotto & Alarm &copy; 2026</p>
+    <footer class="app-footer text-center border-t border-white/5 p-4">
+      <p class="text-[10px] text-gray-600">Todo & Alarm &copy; 2026</p>
     </footer>
   </div>
   
-  <script src="popup.js"></script>
+  <script src="./popup.js"></script>
 </body>
 </html>

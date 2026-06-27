@@ -1,7 +1,8 @@
-// LottoAlarm Chrome Extension - Popup Controller
+// TodoAlarm Chrome Extension - Popup Controller
 
 document.addEventListener("DOMContentLoaded", () => {
   // DOM 요소 선택
+  const app_version = document.getElementById("app_version");
   const alarmList = document.getElementById("alarm-list");
   const btnShowAddForm = document.getElementById("btn-show-add-form");
   const formContainer = document.getElementById("form-container");
@@ -50,15 +51,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 알람 카드 렌더링 함수
+  // 알람 카드 렌더링 함수 (Tailwind CSS 적용)
   function renderReminders(reminders) {
     alarmList.innerHTML = "";
 
     if (reminders.length === 0) {
       alarmList.innerHTML = `
-        <div class="empty-state">
-          <svg class="icon-empty" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-          <p>등록된 알람 일정이 없습니다.</p>
+        <div class="empty-state flex flex-col items-center justify-center py-10 px-5 text-center bg-[#161523] border border-dashed border-white/5 rounded-xl text-gray-400">
+          <svg class="w-12 h-12 fill-gray-600 mb-3" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <p class="text-xs text-gray-400">등록된 알림 일정이 없습니다.</p>
         </div>
       `;
       return;
@@ -66,42 +67,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
     reminders.forEach((reminder) => {
       const card = document.createElement("div");
-      card.className = `alarm-card ${reminder.enabled ? "" : "disabled"}`;
+      card.className = `alarm-card bg-[#161523] border border-white/5 rounded-xl p-3.5 flex flex-col gap-2.5 transition-all hover:border-purple-500/30 ${reminder.enabled ? "" : "disabled"}`;
       card.id = `card-${reminder.id}`;
 
       // 요일 표시 텍스트 포맷팅
       const formattedDays = formatDaysText(reminder.days);
-      // const displayUrl = reminder.url.replace(/^https?:\/\/(www\.)?/, "").substring(0, 30) + (reminder.url.length > 30 ? "..." : "");
-      const displayUrl = reminder.url
+      const displayUrl = reminder.url;
 
       card.innerHTML = `
-        <div class="alarm-card-header">
-          <div class="alarm-card-info">
-            <h3 class="alarm-card-title">${escapeHtml(reminder.title)}</h3>
-            <div class="alarm-card-schedule">
+        <div class="alarm-card-header flex justify-between items-start">
+          <div class="alarm-card-info flex-1 pr-3">
+            <h3 class="alarm-card-title text-sm font-semibold text-white">${escapeHtml(reminder.title)}</h3>
+            <div class="alarm-card-schedule text-[11px] text-purple-400 font-semibold mt-1">
               ${formattedDays} &bull; ${reminder.time}
             </div>
-            <div class="alarm-card-url" title="${escapeHtml(reminder.url)}">
-              <svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
-              <a class="alarm-card-url" href="${reminder.url}" target="_blank">${escapeHtml(displayUrl)}</a>
+            <div class="alarm-card-url text-[11px] text-gray-400 hover:text-white flex items-center gap-1.5 relative pl-4.5 mt-1.5 break-all" title="${escapeHtml(reminder.url)}">
+              <svg class="w-3 h-3 fill-current absolute left-0 top-0.5" viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+              <a href="${reminder.url}" target="_blank" class="hover:underline">${escapeHtml(displayUrl)}</a>
             </div>
           </div>
-          <div class="alarm-card-controls">
-            <label class="switch">
-              <input type="checkbox" class="toggle-enabled" data-id="${reminder.id}" ${reminder.enabled ? "checked" : ""}>
-              <span class="slider"></span>
+          <div class="alarm-card-controls flex items-center gap-2">
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" class="sr-only peer toggle-enabled" data-id="${reminder.id}" ${reminder.enabled ? "checked" : ""}>
+              <div class="w-9 h-5 bg-[#1f1d31] border border-[#ffffff10] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-gray-400 peer-checked:after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
             </label>
           </div>
         </div>
-        <div class="alarm-card-actions">
-          <button class="btn-icon btn-test" data-id="${reminder.id}" title="테스트 알림 받기">
-            <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
+        <div class="alarm-card-actions flex justify-end items-center gap-1.5 pt-2 border-t border-white/5 mt-0.5">
+          <button class="btn-test p-1.5 rounded-md text-gray-400 hover:bg-[#1f1d31] hover:text-white transition-all cursor-pointer" data-id="${reminder.id}" title="테스트 알림 받기">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
           </button>
-          <button class="btn-icon btn-edit" data-id="${reminder.id}" title="수정">
-            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+          <button class="btn-edit p-1.5 rounded-md text-gray-400 hover:bg-[#1f1d31] hover:text-white transition-all cursor-pointer" data-id="${reminder.id}" title="수정">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
           </button>
-          <button class="btn-icon delete btn-delete" data-id="${reminder.id}" title="삭제">
-            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          <button class="btn-delete p-1.5 rounded-md text-gray-400 hover:bg-red-500/10 hover:text-red-500 transition-all cursor-pointer" data-id="${reminder.id}" title="삭제">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
           </button>
         </div>
       `;
@@ -394,5 +394,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 앱 로드시 데이터 렌더링
+  fetch("./manifest.json")
+    .then((res) => res.json())
+    .then((data) => {
+      app_version.innerHTML = "v" + data.version;
+    });
+
   loadAndRenderReminders();
 });
