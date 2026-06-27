@@ -71,7 +71,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // 요일 표시 텍스트 포맷팅
       const formattedDays = formatDaysText(reminder.days);
-      const displayUrl = reminder.url.replace(/^https?:\/\/(www\.)?/, "").substring(0, 30) + (reminder.url.length > 30 ? "..." : "");
+      // const displayUrl = reminder.url.replace(/^https?:\/\/(www\.)?/, "").substring(0, 30) + (reminder.url.length > 30 ? "..." : "");
+      const displayUrl = reminder.url
 
       card.innerHTML = `
         <div class="alarm-card-header">
@@ -82,7 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
             <div class="alarm-card-url" title="${escapeHtml(reminder.url)}">
               <svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
-              ${escapeHtml(displayUrl)}
+              <a class="alarm-card-url" href="${reminder.url}" target="_blank">${escapeHtml(displayUrl)}</a>
             </div>
           </div>
           <div class="alarm-card-controls">
@@ -138,20 +139,37 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".btn-test").forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.dataset.id;
-        chrome.storage.local.get(["reminders"], (result) => {
-          const reminders = result.reminders || [];
-          const reminder = reminders.find((r) => r.id === id);
-          if (reminder) {
-            chrome.runtime.sendMessage({
-              type: "test_notification",
-              data: {
-                title: `[테스트] ${reminder.title}`,
-                message: reminder.message,
-                url: reminder.url
-              }
-            });
-          }
-        });
+        try {
+          chrome.storage.local.get(["reminders"], (result) => {
+            if (chrome.runtime.lastError) {
+              alert("확장 프로그램 컨텍스트가 만료되었습니다. 이 팝업 창을 닫고 다시 열어주세요!");
+              return;
+            }
+            const reminders = result.reminders || [];
+            const reminder = reminders.find((r) => r.id === id);
+            if (reminder) {
+              chrome.runtime.sendMessage({
+                type: "test_notification",
+                data: {
+                  title: `[테스트] ${reminder.title}`,
+                  message: reminder.message,
+                  url: reminder.url
+                }
+              }, (response) => {
+                if (chrome.runtime.lastError) {
+                  console.error("Test Message Error:", chrome.runtime.lastError.message);
+                  alert("알림 발송 중 오류가 발생했습니다. 서비스 워커 콘솔을 확인해 보시거나, 팝업을 닫고 다시 열어보세요.");
+                } else if (response && !response.success) {
+                  console.error("Notification creation failed:", response.error);
+                  alert("알림 생성 실패: " + response.error);
+                }
+              });
+            }
+          });
+        } catch (err) {
+          console.error("Context Error:", err);
+          alert("확장 프로그램 컨텍스트가 만료되었습니다. 이 팝업 창을 닫고 다시 열어주세요!");
+        }
       });
     });
 
@@ -276,12 +294,21 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       chrome.storage.local.set({ reminders }, () => {
-        chrome.runtime.sendMessage({ type: "sync_alarms" }, (res) => {
-          console.log("Alarms sync complete:", res);
+        try {
+          chrome.runtime.sendMessage({ type: "sync_alarms" }, (res) => {
+            if (chrome.runtime.lastError) {
+              console.error("Sync Error:", chrome.runtime.lastError.message);
+            }
+            loadAndRenderReminders();
+            formContainer.classList.add("hidden");
+            resetForm();
+          });
+        } catch (err) {
+          console.error(err);
           loadAndRenderReminders();
           formContainer.classList.add("hidden");
           resetForm();
-        });
+        }
       });
     });
   });
@@ -298,7 +325,15 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       chrome.storage.local.set({ reminders }, () => {
-        chrome.runtime.sendMessage({ type: "sync_alarms" });
+        try {
+          chrome.runtime.sendMessage({ type: "sync_alarms" }, () => {
+            if (chrome.runtime.lastError) {
+              console.error(chrome.runtime.lastError.message);
+            }
+          });
+        } catch (err) {
+          console.error(err);
+        }
       });
     });
   }
@@ -310,9 +345,17 @@ document.addEventListener("DOMContentLoaded", () => {
       reminders = reminders.filter((r) => r.id !== id);
 
       chrome.storage.local.set({ reminders }, () => {
-        chrome.runtime.sendMessage({ type: "sync_alarms" }, () => {
+        try {
+          chrome.runtime.sendMessage({ type: "sync_alarms" }, () => {
+            if (chrome.runtime.lastError) {
+              console.error(chrome.runtime.lastError.message);
+            }
+            loadAndRenderReminders();
+          });
+        } catch (err) {
+          console.error(err);
           loadAndRenderReminders();
-        });
+        }
       });
     });
   }

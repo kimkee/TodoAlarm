@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "로또 & 할일 알리미 (LottoAlarm)",
+  "name": "할일 알리미 (TodoAlarm)",
   "version": "1.0.0",
-  "description": "지정된 요일과 시간에 브라우저 알림을 띄워 로또 구매 및 주요 일정을 잊지 않도록 돕는 프리미엄 알림 서비스입니다.",
+  "description": "지정된 요일과 시간에 브라우저 알림을 띄워 주요 일정을 잊지 않도록 돕는 알림 서비스입니다.",
   "permissions": [
     "alarms",
     "notifications",
