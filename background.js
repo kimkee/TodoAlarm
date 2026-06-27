@@ -1,4 +1,4 @@
-// LottoAlarm Chrome Extension - Background Service Worker (Manifest V3)
+// TodoAlarm Chrome Extension - Background Service Worker (Manifest V3)
 
 // 기본 알람 설정 (매주 월/금 오전 10시)
 const DEFAULT_REMINDERS = [
@@ -30,7 +30,6 @@ chrome.runtime.onStartup.addListener(async () => {
 chrome.alarms.onAlarm.addListener((alarm) => {
   console.log("Alarm triggered:", alarm.name);
   
-  // 파이프(|) 구분자를 사용하여 안전하게 ID 추출
   if (alarm.name.startsWith("alarm|")) {
     const parts = alarm.name.split("|");
     const reminderId = parts[1];
@@ -43,25 +42,26 @@ chrome.alarms.onAlarm.addListener((alarm) => {
       }
     });
   } else if (alarm.name.startsWith("snooze|")) {
-    const parts = alarm.name.split("|");
-    const reminderId = parts[1];
-    const title = decodeURIComponent(parts[2]);
-    const message = decodeURIComponent(parts[3]);
-    const url = decodeURIComponent(parts[4]);
-
-    if (reminderId.startsWith("test_")) {
-      // 테스트 알람은 스토리지 조회 없이 즉시 표시
-      showNotification({ id: reminderId, title, message, url });
-    } else {
-      // 일반 알람은 상태가 활성화되어 있는지 최종 점검 후 표시
-      chrome.storage.local.get(["reminders"], (result) => {
-        const reminders = result.reminders || [];
-        const reminder = reminders.find((r) => r.id === reminderId);
-        if (reminder && reminder.enabled) {
-          showNotification(reminder);
-        }
-      });
-    }
+    // snooze 알람 정보 조회
+    chrome.storage.local.get([alarm.name], (result) => {
+      const details = result[alarm.name];
+      if (details) {
+        // 임시 저장된 상세 정보가 있으면 그 정보로 알림 노출
+        showNotification(details);
+        chrome.storage.local.remove(alarm.name);
+      } else {
+        // 저장된 상세 정보가 없는 일반 알람인 경우 원래 리마인더 검색
+        const parts = alarm.name.split("|");
+        const reminderId = parts[1];
+        chrome.storage.local.get(["reminders"], (res) => {
+          const reminders = res.reminders || [];
+          const reminder = reminders.find((r) => r.id === reminderId);
+          if (reminder && reminder.enabled) {
+            showNotification(reminder);
+          }
+        });
+      }
+    });
 
     // 1회성 알람이므로 명시적으로 제거
     chrome.alarms.clear(alarm.name);
@@ -103,67 +103,90 @@ chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) =
   }
 });
 
+// 알림이 닫힐 때 임시 저장 스토리지 정리
+chrome.notifications.onClosed.addListener((notificationId, byUser) => {
+  if (notificationId.startsWith("todoalarm|")) {
+    chrome.storage.local.remove(notificationId);
+  }
+});
+
 // 알림 노출 처리 함수 (Promise 형태로 에러 전달 가능)
 function showNotification(reminder) {
   return new Promise((resolve, reject) => {
-    // 알림 고유 ID에 구분값, 제목, 내용, 이동할 URL 포함하여 전달 (Stateless 처리)
-    const notificationId = `lottoalarm|${reminder.id}|${encodeURIComponent(reminder.title)}|${encodeURIComponent(reminder.message)}|${encodeURIComponent(reminder.url)}|${Date.now()}`;
+    // 50자 이하의 매우 심플한 고유 ID 생성 (todoalarm|아이디|타임스탬프)
+    const notificationId = `todoalarm|${reminder.id}|${Date.now()}`;
     const iconUrl = chrome.runtime.getURL("icons/icon128.png");
 
-    console.log("Creating notification:", notificationId);
+    // 알림에 대응되는 상세 정보를 스토리지에 매핑 저장 (ID 길이 500자 제한 우회)
+    const details = {
+      id: reminder.id,
+      title: reminder.title,
+      message: reminder.message,
+      url: reminder.url
+    };
 
-    chrome.notifications.create(notificationId, {
-      type: "basic",
-      iconUrl: iconUrl,
-      title: reminder.title || "알림",
-      message: reminder.message || "설정하신 알림 시간입니다.",
-      buttons: [
-        { title: "사이트 열기" },
-        { title: "10분 뒤 다시 알림" }
-      ],
-      requireInteraction: true // 사용자가 닫기 전까지 떠 있도록 함
-    }, (createdId) => {
-      if (chrome.runtime.lastError) {
-        console.error("Notification Error:", chrome.runtime.lastError.message);
-        reject(new Error(chrome.runtime.lastError.message));
-      } else {
-        console.log("Notification created successfully:", createdId);
-        resolve(createdId);
-      }
+    chrome.storage.local.set({ [notificationId]: details }, () => {
+      chrome.notifications.create(notificationId, {
+        type: "basic",
+        iconUrl: iconUrl,
+        title: reminder.title || "알림",
+        message: reminder.message || "설정하신 알림 시간입니다.",
+        buttons: [
+          { title: "사이트 열기" },
+          { title: "10분 뒤 다시 알림" }
+        ],
+        requireInteraction: true // 사용자가 닫기 전까지 떠 있도록 함
+      }, (createdId) => {
+        if (chrome.runtime.lastError) {
+          console.error("Notification Error:", chrome.runtime.lastError.message);
+          // 실패 시 스토리지 정리
+          chrome.storage.local.remove(notificationId);
+          reject(new Error(chrome.runtime.lastError.message));
+        } else {
+          console.log("Notification created successfully:", createdId);
+          resolve(createdId);
+        }
+      });
     });
   });
 }
 
 // 알림 클릭 핸들링 함수
 function handleNotificationClick(notificationId) {
-  if (notificationId.startsWith("lottoalarm|")) {
-    const parts = notificationId.split("|");
-    const url = decodeURIComponent(parts[4]);
-    if (url) {
-      chrome.tabs.create({ url: url });
-    }
-    chrome.notifications.clear(notificationId);
+  if (notificationId.startsWith("todoalarm|")) {
+    chrome.storage.local.get([notificationId], (result) => {
+      const details = result[notificationId];
+      if (details && details.url) {
+        chrome.tabs.create({ url: details.url });
+      }
+      // 클릭했으므로 스토리지 정리 및 알림 제거
+      chrome.storage.local.remove(notificationId);
+      chrome.notifications.clear(notificationId);
+    });
   }
 }
 
 // 10분 재알림(Snooze) 설정 함수
 function handleSnooze(notificationId) {
-  if (notificationId.startsWith("lottoalarm|")) {
-    const parts = notificationId.split("|");
-    const reminderId = parts[1];
-    const title = parts[2]; // 이미 인코딩된 상태
-    const message = parts[3]; // 이미 인코딩된 상태
-    const url = parts[4]; // 이미 인코딩된 상태
-
-    // 10분 뒤 작동할 snooze 알람명 생성
-    const snoozeAlarmName = `snooze|${reminderId}|${title}|${message}|${url}|${Date.now()}`;
-    
-    chrome.alarms.create(snoozeAlarmName, {
-      delayInMinutes: 10
+  if (notificationId.startsWith("todoalarm|")) {
+    chrome.storage.local.get([notificationId], (result) => {
+      const details = result[notificationId];
+      if (details) {
+        // 알람명 자체를 짧게 만들고 데이터를 스토리지에 바인딩
+        const snoozeAlarmName = `snooze|${details.id}|${Date.now()}`;
+        
+        chrome.storage.local.set({ [snoozeAlarmName]: details }, () => {
+          chrome.alarms.create(snoozeAlarmName, {
+            delayInMinutes: 10
+          });
+          console.log(`Scheduled snooze alarm: ${snoozeAlarmName} in 10 minutes`);
+        });
+      }
+      
+      // 기존 알림 스토리지 제거 및 알림창 제거
+      chrome.storage.local.remove(notificationId);
+      chrome.notifications.clear(notificationId);
     });
-    console.log(`Scheduled snooze alarm: ${snoozeAlarmName} in 10 minutes`);
-
-    chrome.notifications.clear(notificationId);
   }
 }
 
