@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lotto Alarm</title>
+  <!-- Google Fonts 적용 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- 헤더 섹션 -->
+    <header class="app-header">
+      <div class="logo-area">
+        <img src="icons/icon128.png" alt="Lotto Alarm Logo" class="app-logo">
+        <div class="brand-info">
+          <h1>Lotto & Alarm</h1>
+          <p>지정된 시간에 알려주는 스마트 리마인더</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <main class="app-main">
+      <!-- 알람 목록 섹션 -->
+      <section class="section alarms-section">
+        <div class="section-header">
+          <h2>내 알림 일정</h2>
+          <button id="btn-show-add-form" class="btn btn-primary btn-sm">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            알림 추가
+          </button>
+        </div>
+
+        <div id="alarm-list" class="alarm-list">
+          <!-- JS를 통해 동적 생성됨 -->
+          <div class="empty-state">
+            <svg class="icon-empty" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            <p>등록된 알림이 없습니다.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 알람 작성/수정 양식 (기본 숨김) -->
+      <section id="form-container" class="section form-section hidden">
+        <div class="section-header">
+          <h2 id="form-title">알림 일정 추가</h2>
+        </div>
+        
+        <form id="alarm-form">
+          <input type="hidden" id="edit-id" value="">
+          
+          <div class="form-group">
+            <label for="alarm-name">알림 이름</label>
+            <input type="text" id="alarm-name" placeholder="예: 로또 구매 알리미" required maxlength="20">
+          </div>
+
+          <div class="form-group">
+            <label for="alarm-message">알림 메시지</label>
+            <input type="text" id="alarm-message" placeholder="예: 잊지 말고 로또 사세요!" required maxlength="50">
+          </div>
+
+          <div class="form-group">
+            <label for="alarm-url">연결할 URL</label>
+            <input type="url" id="alarm-url" placeholder="https://..." required>
+          </div>
+
+          <div class="form-group">
+            <label>알람 요일 선택</label>
+            <div class="day-selector">
+              <button type="button" class="day-chip" data-day="1">월</button>
+              <button type="button" class="day-chip" data-day="2">화</button>
+              <button type="button" class="day-chip" data-day="3">수</button>
+              <button type="button" class="day-chip" data-day="4">목</button>
+              <button type="button" class="day-chip" data-day="5">금</button>
+              <button type="button" class="day-chip" data-day="6">토</button>
+              <button type="button" class="day-chip" data-day="0">일</button>
+            </div>
+            <div id="day-error" class="error-msg hidden">최소 하루 이상 요일을 선택해 주세요.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="alarm-time">시간 설정</label>
+            <input type="time" id="alarm-time" required>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" id="btn-cancel" class="btn btn-secondary">취소</button>
+            <button type="submit" id="btn-submit" class="btn btn-accent">저장하기</button>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <!-- 푸터 섹션 -->
+    <footer class="app-footer">
+      <p>Lotto & Alarm &copy; 2026</p>
+    </footer>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
